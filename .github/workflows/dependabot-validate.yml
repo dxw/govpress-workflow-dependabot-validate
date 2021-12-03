@@ -2,39 +2,31 @@ name: Validate Dependabot file
 
 on: 
   workflow_call:
+    inputs:
+      package-ecosystem:
+        required: true
+        type: string
+      package-filename:
+        required: true
+        type: string
 
 jobs:
   dependabot-validate:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: Check Composer paths
+      - name: Check Dependabot paths
         shell: bash
         run: |
-          for path in $(find . -name "composer.json"); do
+          for path in $(find . -name "${{ inputs.package-filename }}"); do
             path=${path#"."}
-            path=${path%"/composer.json"}
+            path=${path%"/${{ inputs.package-filename }}"}
             if [ -z $path ]; then
               path="/"
             fi
-            result=$(yq e '.updates.[] | select(.package-ecosystem == "composer" and .directory == "'${path}'") | .directory' .github/dependabot.yml)
+            result=$(yq e '.updates.[] | select(.package-ecosystem == "${{ inputs.package-ecosystem }}" and .directory == "'${path}'") | .directory' .github/dependabot.yml)
             if [ -z $result ]; then
-                echo "Dependabot entry not found for composer.json at ${path}"
-                exit 1
+              echo "Dependabot entry not found for ${{ inputs.package-filename }} at ${path}"
+              exit 1
             fi  
-          done
-      - name: Check NPM paths
-        shell: bash
-        run: |
-          for path in $(find . -name "package.json"); do
-            path=${path#"."}
-            path=${path%"/package.json"}
-            if [ -z $path ]; then
-              path="/"
-            fi
-            result=$(yq e '.updates.[] | select(.package-ecosystem == "npm" and .directory == "'${path}'") | .directory' .github/dependabot.yml)
-            if [ -z $result ]; then
-                echo "Dependabot entry not found for package.json at ${path}"
-                exit 1
-            fi  
-          done                 
+          done               
