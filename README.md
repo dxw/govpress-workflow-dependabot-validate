@@ -2,6 +2,4 @@
 
 This repo holds a reusable workflow for validating Dependabot files in GovPress projects.
 
-It will search the repo for `composer.json` and `package.json` files, and then check there is an entry for each one in the repo's `dependabot.yml`. If there isn't, the workflow will fail.
-
-This should ensure we don't allow our `dependabot.yml` files to fall out of date by not updating them when we add new `composer.json` or `package.json` files to a repo.
+You can pass it any `package-ecosystem` (e.g. `composer`), and the corresponding filename for that package manager (e.g. `composer.json`). It will search the repo for any files matching that filename, and then check if the `dependabot.yml` file contains an entry for all found files for that package ecosystem. If it does not, the workflow will fail.
