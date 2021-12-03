@@ -1,0 +1,40 @@
+name: Validate Dependabot file
+
+on: 
+  workflow_call:
+
+jobs:
+  dependabot-validate:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check Composer paths
+        shell: bash
+        run: |
+          for path in $(find . -name "composer.json"); do
+            path=${path#"."}
+            path=${path%"/composer.json"}
+            if [ -z $path ]; then
+              path="/"
+            fi
+            result=$(yq e '.updates.[] | select(.package-ecosystem == "composer" and .directory == "'${path}'") | .directory' .github/dependabot.yml)
+            if [ -z $result ]; then
+                echo "Dependabot entry not found for composer.json at ${path}"
+                exit 1
+            fi  
+          done
+      - name: Check NPM paths
+        shell: bash
+        run: |
+          for path in $(find . -name "package.json"); do
+            path=${path#"."}
+            path=${path%"/package.json"}
+            if [ -z $path ]; then
+              path="/"
+            fi
+            result=$(yq e '.updates.[] | select(.package-ecosystem == "npm" and .directory == "'${path}'") | .directory' .github/dependabot.yml)
+            if [ -z $result ]; then
+                echo "Dependabot entry not found for package.json at ${path}"
+                exit 1
+            fi  
+          done                 
